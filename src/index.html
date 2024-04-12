@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network — LinkedIn Connections Graph</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0c10;color:#e7e6e1;font-family:-apple-system,'Segoe UI',sans-serif;overflow:hidden;height:100vh}
+
+.tb{
+  position:fixed;top:0;left:0;right:0;z-index:50;height:48px;
+  display:flex;align-items:center;gap:.8rem;padding:0 1rem;
+  background:rgba(10,12,16,.92);backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(123,159,212,.14);
+}
+.tb h1{
+  font-family:'Iowan Old Style',Georgia,serif;font-size:.95rem;font-weight:500;
+  color:#7b9fd4;white-space:nowrap;margin-right:.6rem;
+}
+.tb .conn-status{
+  font-size:.62rem;color:#6a6a64;border:1px solid rgba(255,255,255,.08);
+  padding:3px 9px;border-radius:12px;
+}
+.tb .conn-status.live{color:#5fae84;border-color:rgba(95,174,132,.3)}
+.tb input#search{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  border-radius:5px;padding:5px 10px;color:#e7e6e1;font-size:.72rem;width:160px;outline:none;
+}
+.tb input#search:focus{border-color:#7b9fd4}
+.tb .spacer{flex:1}
+.tb select{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  color:#e7e6e1;border-radius:5px;padding:5px 8px;font-size:.7rem;
+}
+.tb button{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  color:#e7e6e1;border-radius:5px;padding:5px 10px;font-size:.7rem;cursor:pointer;
+}
+.tb button:hover{border-color:#7b9fd4}
+
+.legend{
+  position:fixed;top:56px;left:8px;z-index:40;
+  background:rgba(16,19,25,.9);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.06);border-radius:10px;
+  padding:.6rem .8rem;font-size:.65rem;min-width:150px;
+}
+.legend h4{font-size:.55rem;color:#9a9a92;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem}
+.legend .li{display:flex;align-items:center;gap:.4rem;padding:.15rem 0;color:#9a9a92}
+.legend .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+.stats{
+  position:fixed;bottom:0;left:0;right:0;z-index:50;
+  display:flex;justify-content:center;gap:2rem;padding:.45rem;
+  background:rgba(10,12,16,.92);border-top:1px solid rgba(123,159,212,.1);
+}
+.stats .s{text-align:center}
+.stats .v{font-size:.8rem;font-weight:600;color:#7b9fd4}
+.stats .k{font-size:.5rem;color:#6a6a64;text-transform:uppercase;letter-spacing:.4px}
+
+canvas#g{position:fixed;top:48px;left:0;cursor:grab}
+canvas#g:active{cursor:grabbing}
+
+#tt{
+  position:fixed;z-index:70;padding:.4rem .6rem;border-radius:6px;
+  background:rgba(16,19,25,.96);border:1px solid rgba(123,159,212,.2);
+  pointer-events:none;opacity:0;transition:opacity .1s;max-width:240px;font-size:.68rem;line-height:1.4;
+}
+#tt .tn{font-weight:600;color:#7b9fd4}
+#tt .td{color:#9a9a92;margin-top:2px}
+
+.po{position:fixed;inset:0;z-index:75;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:.2s}
+.po.open{opacity:1;pointer-events:auto}
+.pn{
+  position:fixed;top:0;right:0;z-index:76;width:min(380px,88vw);height:100vh;
+  background:#11141a;border-left:1px solid rgba(123,159,212,.14);
+  transform:translateX(100%);transition:.25s;overflow-y:auto;padding:1.2rem;
+}
+.pn.open{transform:translateX(0)}
+.pn .cl{
+  position:absolute;top:.8rem;right:.8rem;background:rgba(255,255,255,.06);
+  border:none;color:#e7e6e1;width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:.85rem;
+}
+.pn h3{font-family:'Iowan Old Style',Georgia,serif;font-size:1.1rem;font-weight:500;color:#7b9fd4;margin-bottom:.2rem}
+.pn .tg{
+  display:inline-block;font-size:.58rem;padding:2px 8px;border-radius:10px;
+  font-weight:600;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.4px;
+}
+.pn .sec{margin-bottom:.9rem}
+.pn .sec h4{font-size:.62rem;color:#7b9fd4;text-transform:uppercase;letter-spacing:.4px;margin-bottom:.25rem}
+.pn .sec p{font-size:.78rem;color:#b8b7af;line-height:1.55}
+.pn .sec a{color:#7b9fd4;font-size:.78rem;text-decoration:none}
+.pn .sec a:hover{text-decoration:underline}
+.pn .sec li{font-size:.72rem;color:#b8b7af;padding:.1rem 0 .1rem .6rem;position:relative;list-style:none;cursor:pointer}
+.pn .sec li:hover{color:#7b9fd4}
+.pn .sec li::before{content:'\2192';position:absolute;left:0;color:#6a6a64}
+
+.empty-state{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:1rem;text-align:center;padding:2rem;
+}
+.empty-state.hidden{display:none}
+.empty-state h2{font-family:'Iowan Old Style',Georgia,serif;font-weight:500;color:#7b9fd4;font-size:1.3rem}
+.empty-state p{color:#9a9a92;font-size:.85rem;max-width:420px;line-height:1.6}
+.empty-state .panel{
+  background:#11141a;border:1px solid rgba(255,255,255,.08);border-radius:10px;
+  padding:1.5rem;max-width:460px;width:100%;text-align:left;
+}
+.drop-zone{
+  border:1.5px dashed rgba(123,159,212,.3);border-radius:10px;
+  padding:2rem 1rem;text-align:center;margin-top:.5rem;cursor:pointer;
+  transition:border-color .15s, background .15s;
+}
+.drop-zone:hover, .drop-zone.dragover{border-color:#7b9fd4;background:rgba(123,159,212,.05)}
+.drop-zone p{color:#9a9a92;font-size:.78rem;margin:0}
+.drop-zone .big{font-size:1.4rem;margin-bottom:.4rem;display:block}
+.empty-state .steps{font-size:.72rem;color:#9a9a92;line-height:1.7;margin-top:1rem;text-align:left}
+.empty-state .steps b{color:#c5c4bb}
+.empty-state .note{font-size:.65rem;color:#6a6a64;margin-top:1rem;line-height:1.5}
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+
+<div class="tb">
+  <h1>Network — LinkedIn Graph</h1>
+  <span class="conn-status" id="connStatus">no file loaded</span>
+  <div class="spacer"></div>
+  <select id="clusterMode">
+    <option value="company">Cluster by company</option>
+    <option value="recency">Cluster by connected year</option>
+    <option value="none">No clustering</option>
+  </select>
+  <input id="search" placeholder="Search name or company…" spellcheck="false">
+  <button id="loadNewBtn">⟳ Load new CSV</button>
+</div>
+
+<div class="legend" id="legend">
+  <h4>Reading the graph</h4>
+  <div class="li"><span class="dot" style="background:#7b9fd4"></span>Connection</div>
+  <div class="li"><span class="dot" style="background:#c98a4b"></span>Company (shared employer)</div>
+  <div class="li" style="margin-top:.3rem;color:#5f6068">Node size = company cluster size</div>
+</div>
+
+<canvas id="g"></canvas>
+<div id="tt"><div class="tn" id="ttn"></div><div class="td" id="ttd"></div></div>
+<div class="po" id="po" onclick="closePanel()"></div>
+<div class="pn" id="pn">
+  <button class="cl" onclick="closePanel()">✕</button>
+  <div id="pd"></div>
+</div>
+
+<div class="stats">
+  <div class="s"><div class="v" id="statPeople">0</div><div class="k">Connections</div></div>
+  <div class="s"><div class="v" id="statCompanies">0</div><div class="k">Companies</div></div>
+  <div class="s"><div class="v" id="statTopCompany">—</div><div class="k">Largest cluster</div></div>
+  <div class="s"><div class="v" id="statSpan">—</div><div class="k">First → latest</div></div>
+</div>
+
+<div class="empty-state" id="emptyState">
+  <div class="panel">
+    <h2>Load your LinkedIn connections</h2>
+    <p>This reads the <code>Connections.csv</code> file from LinkedIn's official data export and
+    builds a graph of your network, clustered by shared employer. Nothing is sent anywhere —
+    parsing happens entirely in this browser tab.</p>
+
+    <div class="drop-zone" id="dropZone">
+      <span class="big">📄</span>
+      <p><strong>Drop Connections.csv here</strong><br>or click to browse</p>
+    </div>
+    <input type="file" id="fileInput" accept=".csv">
+
+    <div class="steps">
+      <b>Where to get this file:</b><br>
+      LinkedIn → Me → Settings &amp; Privacy → Data privacy →<br>
+      Get a copy of your data → select <b>Connections</b> → Request archive.<br>
+      Takes 10 minutes–24 hours; LinkedIn emails you a download link.
+    </div>
+    <p class="note">This is your own first-degree connections only — LinkedIn does not allow
+    pulling anyone else's data via API, and this tool doesn't try to.</p>
+  </div>
+</div>
+
+<script src="linkedin-graph.js"></script>
+</body>
+</html>
