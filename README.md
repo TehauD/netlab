@@ -2,7 +2,9 @@
 
 **Local-first network analysis for your LinkedIn connections export.**
 
-Drop in `Connections.csv`, get a force-directed graph plus a statistical read on your
+Navigate to https://www.linkedin.com/mypreferences/d/download-my-data to request your archive (connections.csv).  It can take day to generate...
+
+Once, obtained drop in `Connections.csv`, get a force-directed graph plus a statistical read on your
 professional network: employer concentration, temporal bursts, seniority drift, functional
 homophily, and unsupervised career-era segmentation. Nothing is uploaded. Nothing is stored.
 
