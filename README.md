@@ -10,6 +10,8 @@ Drop in `Connections.csv`, get a force-directed graph plus a statistical read on
 professional network: employer concentration, temporal bursts, seniority drift, functional
 homophily, and unsupervised career-era segmentation. Nothing is uploaded. Nothing is stored.
 
+![LinkedIn Social Graph](sample_data.png)
+
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776ab)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-pytest-0a9edc)](tests/)
