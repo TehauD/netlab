@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Local-first network analysis for your LinkedIn connections export. Nothing leaves your machine.">
+<meta name="color-scheme" content="dark">
+<title>netlab — LinkedIn network analysis</title>
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <h1>netlab</h1>
+  <span class="pill" id="statusPill">no file loaded</span>
+  <span class="pill" id="enginePill" title="Which analysis engine is in use">engine: browser</span>
+
+  <div class="spacer"></div>
+
+  <label class="toggle" title="Replace names with initials in the UI and in exports">
+    <input type="checkbox" id="redactToggle"> redact
+  </label>
+  <select class="ctl" id="clusterMode" aria-label="Cluster nodes by">
+    <option value="company">Cluster by employer</option>
+    <option value="year">Cluster by year</option>
+    <option value="function">Cluster by function</option>
+    <option value="seniority">Cluster by seniority</option>
+    <option value="none">No clustering</option>
+  </select>
+  <input class="ctl" id="search" type="search" placeholder="Search name or employer…" spellcheck="false" aria-label="Search">
+  <button class="ctl" id="fitBtn" title="Fit graph to viewport">⤢ fit</button>
+  <button class="ctl" id="exportBtn" title="Download the analysis document">↓ export</button>
+  <button class="ctl primary" id="loadBtn">⟳ load csv</button>
+</header>
+
+<canvas id="graph" aria-label="Network graph" role="img"></canvas>
+
+<aside class="legend" id="legend" aria-hidden="true">
+  <h4>Reading the graph</h4>
+  <div class="row"><span class="dot" style="background:#7b9fd4"></span>Connection</div>
+  <div class="row"><span class="dot" style="background:#c98a4b"></span><span id="legendHub">Employer</span></div>
+  <p class="hint">Hub size scales with cluster membership. Drag to pan, scroll to zoom, click any node for detail.</p>
+</aside>
+
+<div id="tooltip" role="tooltip"><div class="t-name"></div><div class="t-detail"></div></div>
+
+<button class="dock-toggle" id="dockToggle" aria-controls="dock" aria-expanded="true">analysis</button>
+
+<aside class="dock open" id="dock" aria-label="Analysis panel">
+  <nav class="dock-tabs" id="dockTabs" role="tablist">
+    <button role="tab" data-tab="insights" class="active">Insights</button>
+    <button role="tab" data-tab="concentration">Employers</button>
+    <button role="tab" data-tab="timeline">Timeline</button>
+    <button role="tab" data-tab="composition">Composition</button>
+    <button role="tab" data-tab="eras">Eras</button>
+    <button role="tab" data-tab="quality">Method</button>
+    <button role="tab" data-tab="detail" id="detailTab" hidden>Node</button>
+  </nav>
+  <div class="dock-body" id="dockBody">
+    <p class="empty-note">Load a <code>Connections.csv</code> to populate the analysis.</p>
+  </div>
+</aside>
+
+<footer class="statbar">
+  <div class="stat"><div class="v" id="statPeople">—</div><div class="k">Connections</div></div>
+  <div class="stat"><div class="v" id="statCompanies">—</div><div class="k">Employers</div></div>
+  <div class="stat"><div class="v" id="statEffective">—</div><div class="k">Effective employers</div></div>
+  <div class="stat"><div class="v" id="statGini">—</div><div class="k">Gini</div></div>
+  <div class="stat"><div class="v" id="statTop">—</div><div class="k">Largest cluster</div></div>
+  <div class="stat"><div class="v" id="statSpan">—</div><div class="k">First → latest</div></div>
+</footer>
+
+<section class="onboard" id="onboard">
+  <div class="panel">
+    <h2>Load your LinkedIn connections</h2>
+    <p>
+      This reads <code>Connections.csv</code> from LinkedIn's official data export and analyzes it as a
+      <strong>bipartite affiliation network</strong> — people linked to employers, stamped with an
+      acquisition date. Parsing runs locally; the analysis engine runs on
+      <code>localhost</code> if you started it, otherwise entirely in this tab.
+    </p>
+
+    <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload Connections.csv">
+      <span class="big">📄</span>
+      <p><strong>Drop Connections.csv here</strong><br>or click to browse</p>
+    </div>
+    <input type="file" id="fileInput" accept=".csv,text/csv">
+
+    <div class="engine-row">
+      <span class="pill" id="onboardEngine">checking local engine…</span>
+      <button class="ctl" id="sampleBtn">try the synthetic sample</button>
+    </div>
+
+    <div class="steps">
+      <b>Where to get the file:</b><br>
+      LinkedIn → Me → Settings &amp; Privacy → Data privacy → Get a copy of your data →
+      select <b>Connections</b> → Request archive.<br>
+      Delivery takes 10 minutes to 24 hours.
+    </div>
+
+    <p class="fineprint">
+      This covers your own first-degree connections only. LinkedIn does not expose anyone else's
+      network through the export or any public API, so second-degree structure genuinely is not in
+      this file — and this tool does not invent it. See the <em>Method</em> tab for what is observed
+      versus inferred.
+    </p>
+
+    <div class="err-banner" id="errBanner"></div>
+  </div>
+</section>
+
+<script src="./app.js" type="module"></script>
+</body>
+</html>

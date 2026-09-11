@@ -1,0 +1,8 @@
+{
+  "name": "netlab-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Static front end for netlab. No build step, no dependencies — these files are served as-is.",
+  "license": "MIT"
+}
