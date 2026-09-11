@@ -1,4 +1,4 @@
-# netlab
+# netlab - LinkedIn Social Graph
 
 **Local-first network analysis for your LinkedIn connections export.**
 
